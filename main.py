@@ -49,33 +49,34 @@ def closest_neightbour(x1,y1,x2):
 
 def main():
     x1 = np.linspace(0,5,10)
-    y1 = np.sin(x1)
     x2 = np.linspace(0,5,100)
 
+    # Interpolacja liniowa
     y2 = linear(x1,y1,x2)
-    plt.plot(x2, y2, '.g')
-
+    # Interpolacja najbliższy-sąsiad
     y3 = closest_neightbour(x1,y1,x2)
-    plt.plot(x2, y3, '.b')
+    # Funkcja interpolowana 
+    y1 = np.sin(x1)
 
-    plt.plot(x1, y1, '.r')
-    plt.show()
-
+    # Stworzenie płótna i podzielenie go na sekcje
     fig = plt.figure(tight_layout=True)
     gs = gridspec.GridSpec(2, 2)   
 
+    # Tworzenie oryginalnego sinusa
     ax = fig.add_subplot(gs[0, :])
     ax.plot(x1, y1, '.r') 
     plt.title("Oryginalny sinus")
     ax.set_ylabel('Y')
     ax.set_xlabel('X')
 
+    # Tworzenie wykresu interpolacji najbliższy-sąsiad
     ax = fig.add_subplot(gs[1, 0])
     ax.plot(x2, y3, '.b')
     plt.title("Najbliższy-sąsiad")
     ax.set_ylabel('Y')
     ax.set_xlabel('X')
 
+    # Tworzenie wykresu interpolacji liniowej
     ax = fig.add_subplot(gs[1, 1])
     ax.plot(x2, y2, '.g')
     plt.title("Interpolacja liniowa")
