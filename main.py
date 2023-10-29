@@ -17,9 +17,9 @@ def linear(x1,y1,x2):
                 w2 = x2[i] - x1[j-1]
 
                 # Oblicz wartość dla punktu z wektora x2 i dodaj ją do macierzy y2
-                temp = y1[j] * w2 + y1[j-1] * w1
+                temp = (y1[j] * w2 + y1[j-1] * w1)/(w1+w2)
 
-                y2.append(float(temp * 1.8))
+                y2.append(float(temp))
                 break
 
     return y2
@@ -51,12 +51,12 @@ def main():
     x1 = np.linspace(0,5,10)
     x2 = np.linspace(0,5,100)
 
+    # Funkcja interpolowana 
+    y1 = np.sin(x1)
     # Interpolacja liniowa
     y2 = linear(x1,y1,x2)
     # Interpolacja najbliższy-sąsiad
     y3 = closest_neightbour(x1,y1,x2)
-    # Funkcja interpolowana 
-    y1 = np.sin(x1)
 
     # Stworzenie płótna i podzielenie go na sekcje
     fig = plt.figure(tight_layout=True)
