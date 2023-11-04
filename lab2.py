@@ -58,57 +58,99 @@ def err(y1,y2):
 
 
 def square_func(x1,y1,x2):
-    '''
-    wybierz kolejne 3 wartosci x1 i y1
-    Zapakuj je do macierzy i wektora
-    pomnóż odwrotność wektora x z wektorem y
-    wektor wynikowy zawiera wartosci dla funkcji kwadratowej
-    pomnóż wartości x2 z funkcją kwadratową
-    wpisz wyniki do macierzy y2
-    '''
     # Tworzenie zmiennych
     y2 = []
     length1 = len(x1)
     length2 = len(x2)
     shift = False
 
-    for i in range (0, length1, 2):
+    for i in range (0, length1 -1, 2):
         if ((i + 2) >= length1):
             i -= 1
             shift = True
+        elif ((i+1) >= length1):
+            return y2
 
         # Tworzenie tymczasowych macierzy i wektorów do obliczeń
         temp_y = []
-        temp_x = [[1,1,1],
-                  [1,1,1],
-                  [1,1,1]]
+        temp_x = [[x1[i]**2,x1[i],1],
+                  [x1[i+1]**2,x1[i+1],1],
+                  [x1[i+2]**2,x1[i+2],1]]
 
-        # Wypełnnianie macierzy i wektorów. Inkrementacja zmiennej
-        temp_x[0][1] = x1[i]
-        temp_x[0][0] = temp_x[0][1] ** 2
+        # Uzupełnianie macierzy y
         temp_y.append(y1[i])
-        i += 1
-
-        temp_x[1][1] = x1[i]
-        temp_x[1][0] = temp_x[1][1] ** 2
-        temp_y.append(y1[i])
-        i += 1
-
-        temp_x[2][1] = x1[i]
-        temp_x[2][0] = temp_x[2][1] ** 2
-        temp_y.append(y1[i])
+        temp_y.append(y1[i+1])
+        temp_y.append(y1[i+2])
 
         # Odwracanie macierzy X-ów
         xinv = inv(temp_x)
 
         # Mnożenie macierzy
-        abc = xinv@temp_y
+        factors = xinv@temp_y
+        print(factors)
+        
 
+        # Obliczanie odpowiednich wartości dla argumentów z odpowiedniego przedziału x2.
         for j in range(length2):
-            if x1[i-2] <= x2[j] and x1[i] > x2[j] and shift == False:
-                y2.append((x2[j]**2)*abc[0] + x2[j]*abc[1] + abc[2])
-            elif x1[i-1] <= x2[j] and x1[i] >= x2[j] and shift == True:
-                y2.append((x2[j]**2)*abc[0] + x2[j]*abc[1] + abc[2])
+            if x1[i] <= x2[j] and x1[i + 2] > x2[j] and shift == False:
+                y2.append((x2[j]**2)*factors[0] + x2[j]*factors[1] + factors[2])
+            elif x1[i+1] <= x2[j] and x1[i+2] >= x2[j] and shift == True:
+                y2.append((x2[j]**2)*factors[0] + x2[j]*factors[1] + factors[2])
+
+        if i == (length1-2) and shift == False:
+            y2.append((x2[j]**2)*factors[0] + x2[j]*factors[1] + factors[2])
+        
+    return y2
+
+def cubic_func(x1,y1,x2):
+    # Tworzenie zmiennych
+    y2 = []
+    length1 = len(x1)
+    length2 = len(x2)
+    shift = False
+    opt = False
+
+    for i in range (0, length1-1, 3):
+        if ((i + 2) >= length1):
+            i -= 2
+            shift = True
+            opt = False
+        elif ((i + 3) >= length1):
+            i -= 1
+            shift = True
+            opt = True
+        # Tworzenie tymczasowych macierzy i wektorów do obliczeń
+        temp_y = []
+        temp_x = [[x1[i]**3,x1[i]**2,x1[i],1],
+                  [x1[i+1]**3,x1[i+1]**2,x1[i+1],1],
+                  [x1[i+2]**3,x1[i+2]**2,x1[i+2],1],
+                  [x1[i+3]**3,x1[i+3]**2,x1[i+3],1]]
+
+        # Uzupełnianie macierzy y
+        temp_y.append(y1[i])
+        temp_y.append(y1[i+1])
+        temp_y.append(y1[i+2])
+        temp_y.append(y1[i+3])
+
+        # Odwracanie macierzy X-ów
+        xinv = inv(temp_x)
+
+        # Mnożenie macierzy
+        factors = xinv@temp_y
+        print(factors)
+
+        # Obliczanie odpowiednich wartości dla argumentów z odpowiedniego przedziału x2.
+        for j in range(length2):
+            if x1[i] <= x2[j] and x1[i + 3] > x2[j] and shift == False:
+                y2.append((x2[j]**3)*factors[0] + (x2[j]**2)*factors[1] + x2[j]*factors[2] + factors[3])
+            elif x1[i+2] <= x2[j] and x1[i+3] >= x2[j] and shift == True and opt == False:
+                y2.append((x2[j]**3)*factors[0] + (x2[j]**2)*factors[1] + x2[j]*factors[2] + factors[3])
+            elif x1[i+1] <= x2[j] and x1[i+3] >= x2[j] and shift == True and opt == True:
+                y2.append((x2[j]**3)*factors[0] + (x2[j]**2)*factors[1] + x2[j]*factors[2] + factors[3])
+            
+        if i == (length1-4) and shift == False:
+            y2.append((x2[j]**3)*factors[0] + (x2[j]**2)*factors[1] + x2[j]*factors[2] + factors[3])
+
     return y2
 
 
@@ -137,24 +179,44 @@ def main():
 
     # Tworzenie wykresu interpolacji najbliższy-sąsiad
     ax = fig.add_subplot(gs[1, 0])
-    ax.plot(x2, y100, '.b')
+    ax.plot(x2, y3, '.b')
     plt.title("Najbliższy-sąsiad")
     ax.set_ylabel('Y')
     ax.set_xlabel('X')
 
-    y200 = square_func(x1,y1,x2)
     # Tworzenie wykresu interpolacji liniowej
     ax = fig.add_subplot(gs[1, 1])
-    ax.plot(x2, y200, '.g')
+    ax.plot(x2, y2, '.g')
     plt.title("Interpolacja liniowa")
     ax.set_ylabel('Y')
     ax.set_xlabel('X')
 
+    # # Tworzenie oryginalnego sinusa 100 punktów
+    # ax = fig.add_subplot(gs[0, :])
+    # ax.plot(x1, y1, '.r')
+    # plt.title("Oryginalny sinus")
+    # ax.set_ylabel('Y')
+    # ax.set_xlabel('X')
+
+    # # Tworzenie wykresu interpolacji funkcją kwadratową
+    # y4 = square_func(x1,y1,x2)
+    # ax = fig.add_subplot(gs[1, 0])
+    # ax.plot(x2, y4, '.b')
+    # plt.title("Kwadratowa")
+    # ax.set_ylabel('Y')
+    # ax.set_xlabel('X')
+
+    # # Tworzenie wykresu funkcją sześcienną
+    # y5 = cubic_func(x1, y1, x2)
+    # ax = fig.add_subplot(gs[1, 1])
+    # ax.plot(x2, y5, '.g')
+    # plt.title("Sześcienna")
+    # ax.set_ylabel('Y')
+    # ax.set_xlabel('X')
+
     fig.align_labels()
     plt.show()
 
-    #plt.plot(x2, y200, '-g')
-    #plt.show()
 
 if __name__ == "__main__":
     main()
