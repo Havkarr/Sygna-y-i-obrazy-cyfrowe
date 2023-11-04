@@ -87,8 +87,6 @@ def square_func(x1,y1,x2):
 
         # Mnożenie macierzy
         factors = xinv@temp_y
-        print(factors)
-        
 
         # Obliczanie odpowiednich wartości dla argumentów z odpowiedniego przedziału x2.
         for j in range(length2):
@@ -137,7 +135,6 @@ def cubic_func(x1,y1,x2):
 
         # Mnożenie macierzy
         factors = xinv@temp_y
-        print(factors)
 
         # Obliczanie odpowiednich wartości dla argumentów z odpowiedniego przedziału x2.
         for j in range(length2):
@@ -170,49 +167,49 @@ def main():
     fig = plt.figure(tight_layout=True)
     gs = gridspec.GridSpec(2, 2)
 
-    # Tworzenie oryginalnego sinusa
-    ax = fig.add_subplot(gs[0, :])
-    ax.plot(x1, y1, '.r')
-    plt.title("Oryginalny sinus")
-    ax.set_ylabel('Y')
-    ax.set_xlabel('X')
-
-    # Tworzenie wykresu interpolacji najbliższy-sąsiad
-    ax = fig.add_subplot(gs[1, 0])
-    ax.plot(x2, y3, '.b')
-    plt.title("Najbliższy-sąsiad")
-    ax.set_ylabel('Y')
-    ax.set_xlabel('X')
-
-    # Tworzenie wykresu interpolacji liniowej
-    ax = fig.add_subplot(gs[1, 1])
-    ax.plot(x2, y2, '.g')
-    plt.title("Interpolacja liniowa")
-    ax.set_ylabel('Y')
-    ax.set_xlabel('X')
-
-    # # Tworzenie oryginalnego sinusa 100 punktów
+    # # Tworzenie oryginalnego sinusa
     # ax = fig.add_subplot(gs[0, :])
     # ax.plot(x1, y1, '.r')
     # plt.title("Oryginalny sinus")
     # ax.set_ylabel('Y')
     # ax.set_xlabel('X')
 
-    # # Tworzenie wykresu interpolacji funkcją kwadratową
-    # y4 = square_func(x1,y1,x2)
+    # # Tworzenie wykresu interpolacji najbliższy-sąsiad
     # ax = fig.add_subplot(gs[1, 0])
-    # ax.plot(x2, y4, '.b')
-    # plt.title("Kwadratowa")
+    # ax.plot(x2, y3, '.b')
+    # plt.title("Najbliższy-sąsiad")
     # ax.set_ylabel('Y')
     # ax.set_xlabel('X')
 
-    # # Tworzenie wykresu funkcją sześcienną
-    # y5 = cubic_func(x1, y1, x2)
+    # # Tworzenie wykresu interpolacji liniowej
     # ax = fig.add_subplot(gs[1, 1])
-    # ax.plot(x2, y5, '.g')
-    # plt.title("Sześcienna")
+    # ax.plot(x2, y2, '.g')
+    # plt.title("Interpolacja liniowa")
     # ax.set_ylabel('Y')
     # ax.set_xlabel('X')
+
+    # Tworzenie oryginalnego sinusa 100 punktów
+    ax = fig.add_subplot(gs[0, :])
+    ax.plot(x1, y1, '.r')
+    plt.title("Oryginalny sinus")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
+
+    # Tworzenie wykresu interpolacji funkcją kwadratową
+    y4 = square_func(x1,y1,x2)
+    ax = fig.add_subplot(gs[1, 0])
+    ax.plot(x2, y4, '-b')
+    plt.title("Kwadratowa")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
+
+    # Tworzenie wykresu funkcją sześcienną
+    y5 = cubic_func(x1, y1, x2)
+    ax = fig.add_subplot(gs[1, 1])
+    ax.plot(x2, y5, '-g')
+    plt.title("Sześcienna")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
 
     fig.align_labels()
     plt.show()
