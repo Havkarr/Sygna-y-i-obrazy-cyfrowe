@@ -3,25 +3,21 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from numpy.linalg import inv
 from PIL import Image
-import cv2  
 
 '''
 OpenCV korzysta z reprezentacji kolorów BGR zamiast RGB. !!!
 
 Plan dalszych działań:
-- Implementacja filtru Fuji
-- Pobranie zdjęć R, G, B, RGB dla filtra fuji
-- Poprawienie filtru Bayera aby wyświetlał kolory w kompozycji RGB a nie BGR!
 - Interpolacja koloró R, G, B
 - Pobrać obrazy po interpolacji
 - Suma obrazów
 
 '''
 
-
-def Bayer_filter(image, matrix):
+def filter(image, matrix):
     # resize matrix
-    resized_matrix = np.tile(matrix, ( image.shape[0] // matrix.shape[0], image.shape[1] // matrix.shape[1], 1))
+    resized_matrix = np.tile(matrix, ( (image.shape[0] // matrix.shape[0])+1, (image.shape[1] // matrix.shape[1])+1, 1))
+    resized_matrix = resized_matrix[:image.shape[0], :image.shape[1]]
 
     # Pomnóż obie macierze przez siebie (element-wise)
     result = image*resized_matrix
@@ -29,44 +25,10 @@ def Bayer_filter(image, matrix):
     # Tworzenie obrazu
     result_image = (result).astype(np.uint8)
 
-    # Wyświetlanie obrazu
-    cv2.imshow("Result Image", result_image)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-
-    plt.imsave('test.png', result_image)
+    plt.imshow(result_image)
+    plt.show()
 
     return result
-
-
-def demosaic():
-    with Image.open("image.png") as im:
-        photo_array = np.array(im)
-
-        red_Bayer_filtr = np.array([[[0,0,0], [0,0,0]],
-                                [[0,0,1], [0,0,0]]])
-        
-        green_Bayer_filtr = np.array([[[0,1,0], [0,0,0]],
-                                  [[0,0,0], [0,1,0]]])
-        
-        blue_Bayer_filtr = np.array([[[0,0,0], [1,0,0]],
-                                 [[0,0,0], [0,0,0]]])
-
-        red_Fuji_filtr = np.array([[[0,0,0], [0,0,0], [0,0,1], [0,0,0], [0,0,1], [0,0,0]],
-                                [[0,0,1], [0,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0]],
-                                [[0,0,0], [0,0,0], [0,0,0], [0,0,1], [0,0,0], [0,0,0]],
-                                [[0,0,0], [0,0,1], [0,0,0], [0,0,0], [0,0,0], [0,0,1]],
-                                [[0,0,0], [0,0,0], [0,0,0], [0,0,1], [0,0,0], [0,0,0]],
-                                [[0,0,1], [0,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0]]])
-
-        print("Czerwo")
-        red_channel = Bayer_filter(photo_array, red_Bayer_filtr)
-        print("green")
-        green_channel = Bayer_filter(photo_array, green_Bayer_filtr)
-        print("blue")
-        blue_channel = Bayer_filter(photo_array, blue_Bayer_filtr)
-
-        return
 
 
 # Interpolacja liniowa
@@ -280,7 +242,42 @@ def main():
     # # fig.align_labels()
     # # plt.show()
 
-    demosaic()
+    with Image.open("image.png") as im:
+        photo_array = np.array(im)
+
+        red_Bayer_filtr = np.array([[[0,0,0], [0,0,0]],
+                                [[1,0,0], [0,0,0]]])
+        
+        green_Bayer_filtr = np.array([[[0,1,0], [0,0,0]],
+                                  [[0,0,0], [0,1,0]]])
+        
+        blue_Bayer_filtr = np.array([[[0,0,0], [0,0,1]],
+                                 [[0,0,0], [0,0,0]]])
+
+        red_Fuji_filtr = np.array([[[0,0,0], [0,0,0], [1,0,0], [0,0,0], [1,0,0], [0,0,0]],
+                                [[1,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0]],
+                                [[0,0,0], [0,0,0], [0,0,0], [1,0,0], [0,0,0], [0,0,0]],
+                                [[0,0,0], [1,0,0], [0,0,0], [0,0,0], [0,0,0], [1,0,0]],
+                                [[0,0,0], [0,0,0], [0,0,0], [1,0,0], [0,0,0], [0,0,0]],
+                                [[1,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0]]])
+
+        green_Fuji_filtr = np.array([[[0,1,0], [0,0,0], [0,0,0], [0,1,0], [0,0,0], [0,0,0]],
+                                [[0,0,0], [0,1,0], [0,1,0], [0,0,0], [0,1,0], [0,1,0]],
+                                [[0,0,0], [0,1,0], [0,1,0], [0,0,0], [0,1,0], [0,1,0]],
+                                [[0,1,0], [0,0,0], [0,0,0], [0,1,0], [0,0,0], [0,0,0]],
+                                [[0,0,0], [0,1,0], [0,1,0], [0,0,0], [0,1,0], [0,1,0]],
+                                [[0,0,0], [0,1,0], [0,1,0], [0,0,0], [0,1,0], [0,1,0]]])
+        
+        blue_Fuji_filtr = np.array([[[0,0,0], [0,0,1], [0,0,0], [0,0,0], [0,0,0], [0,0,1]],
+                                [[0,0,0], [0,0,0], [0,0,0], [0,0,1], [0,0,0], [0,0,0]],
+                                [[0,0,1], [0,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0]],
+                                [[0,0,0], [0,0,0], [0,0,1], [0,0,0], [0,0,1], [0,0,0]],
+                                [[0,0,1], [0,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0]],
+                                [[0,0,0], [0,0,0], [0,0,0], [0,0,1], [0,0,0], [0,0,0]]])
+
+        # red = filter(photo_array, red_Fuji_filtr)
+        # green = filter(photo_array, green_Fuji_filtr)
+        # blue = filter(photo_array, blue_Fuji_filtr)
 
 if __name__ == "__main__":
     main()
