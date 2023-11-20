@@ -269,7 +269,7 @@ def main():
     # fig.align_labels()
     # plt.show()
 
-    with Image.open("image.png") as im:
+    with Image.open("plik.jpg") as im:
         photo_array = np.array(im)
 
         red_Bayer_filtr = np.array([[[0,0,0], [0,0,0]],
@@ -305,26 +305,6 @@ def main():
         red = filter(photo_array, red_Bayer_filtr)
         green = filter(photo_array, green_Bayer_filtr)
         blue = filter(photo_array, blue_Bayer_filtr)
-
-        
-
-        # # Działanie na wierszach
-        # temp1 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
-        # temp2 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
-
-        # for i in range(1, photo_array.shape[0], 2):
-        #     new_row = linear_interpolation(temp2,red[i, :, 0],temp1)
-        #     for j in range(0,photo_array.shape[1]):
-        #         red[i,j,0] = new_row[j]
-
-        # # Działanie na kolumnach
-        # temp1 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
-        # temp2 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
-
-        # for i in range(1, photo_array.shape[1]):
-        #     new_column = linear_interpolation(temp2,red[:, i, 0],temp1)
-        #     for j in range(0,photo_array.shape[0]):
-        #         red[j,i,0] = new_column[j]
         
         # Działanie na wierszach
         temp1 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
@@ -338,14 +318,14 @@ def main():
             red[i,:,0] = new_row
 
         # Działanie na kolumnach
-        temp1 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
-        temp2 = np.linspace(0, photo_array.shape[0], int(photo_array.shape[0]/2))
+        temp3 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
+        temp4 = np.linspace(0, photo_array.shape[0], int(photo_array.shape[0]/2))
 
         for i in range(0, photo_array.shape[1]): 
             column = []
             for j in range(1,photo_array.shape[0], 2):
                 column.append(red[j, i, 0])
-            new_column = linear(temp2,column,temp1)
+            new_column = linear(temp4,column,temp3)
             red[:,i,0] = new_column
 
         result_image = (red).astype(np.uint8)
@@ -353,34 +333,27 @@ def main():
         plt.show()
 ############################################################################################33
         # Działanie na wierszach
-        temp1 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
-        temp2 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
 
-        for i in range(0, photo_array.shape[0], 1): 
+        for i in range(0, photo_array.shape[0], 2): 
             row = []
-            for j in range(0,photo_array.shape[1], 1):
+            for j in range(0,photo_array.shape[1], 2):
                 row.append(green[i, j, 1])
             new_row = linear(temp2,row,temp1)
             green[i,:,1] = new_row
 
         # Działanie na kolumnach
-        temp1 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
-        temp2 = np.linspace(0, photo_array.shape[0], int(photo_array.shape[0]/2))
-
-        for i in range(0, photo_array.shape[1]): 
-            column = []
-            for j in range(0,photo_array.shape[0]):
-                column.append(green[j, i, 1])
-            new_column = linear(temp2,column,temp1)
-            green[:,i,1] = new_column
+        for i in range(1, photo_array.shape[0], 2): 
+            row = []
+            for j in range(1,photo_array.shape[1], 2):
+                row.append(green[i, j, 1])
+            new_row = linear(temp2,row,temp1)
+            green[i,:,1] = new_row
 
         result_image = (green).astype(np.uint8)
         plt.imshow(result_image)
         plt.show()
 ##################################################################################################
          # Działanie na wierszach
-        temp1 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
-        temp2 = np.linspace(0, photo_array.shape[1], int(photo_array.shape[1]/2))
 
         for i in range(0, photo_array.shape[0], 2): 
             row = []
@@ -390,14 +363,12 @@ def main():
             blue[i,:,2] = new_row
 
         # Działanie na kolumnach
-        temp1 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
-        temp2 = np.linspace(0, photo_array.shape[0], int(photo_array.shape[0]/2))
 
         for i in range(0, photo_array.shape[1]): 
             column = []
             for j in range(0,photo_array.shape[0], 2):
                 column.append(blue[j, i, 2])
-            new_column = linear(temp2,column,temp1)
+            new_column = linear(temp4,column,temp3)
             blue[:,i,2] = new_column
         
         result_image = (blue).astype(np.uint8)
