@@ -5,16 +5,11 @@ from numpy.linalg import inv
 from PIL import Image
 
 '''
-OpenCV korzysta z reprezentacji kolorów BGR zamiast RGB. !!!
-
 Plan dalszych działań:
-- porównać zdjęcia za pomocą odejmowania obrazów
-- Interpolacja koloró R, G, B
-- Pobrać obrazy po interpolacji
-- Suma obrazów
-
+- optymalizacja kodu
+- restrukturyzacja kodu
 '''
-
+# Nakładanie filtru na obraz
 def filter(image, matrix):
     # resize matrix
     resized_matrix = np.tile(matrix, ( (image.shape[0] // matrix.shape[0])+1, (image.shape[1] // matrix.shape[1])+1, 1))
@@ -23,11 +18,11 @@ def filter(image, matrix):
     # Pomnóż obie macierze przez siebie (element-wise)
     result = image*resized_matrix
 
-    # Tworzenie obrazu
-    result_image = (result).astype(np.uint8)
+    # # Tworzenie obrazu
+    # result_image = (result).astype(np.uint8)
 
-    plt.imshow(result_image)
-    plt.show()
+    # plt.imshow(result_image)
+    # plt.show()
 
     return result
 
@@ -52,36 +47,9 @@ def linear(x1, y1, x2):
 
     return y2
 
-def linear_interpolation(x1, y1, x2):
-    y2 = []
-
-    # Indeks dla poprzedniego punktu w x1
-    prev_index = 0
-
-    for x2_val in x2:
-        # Znajdź indeks dla x2_val w x1, zaczynając od poprzedniego indeksu
-        while prev_index < len(x1) - 1 and x1[prev_index + 1] < x2_val:
-            prev_index += 1
-
-        # Sprawdź czy x2_val znajduje się pomiędzy x1[prev_index] i x1[prev_index + 1]
-        if prev_index < len(x1) - 1:
-            # Oblicz wagi na podstawie odległości nowego punktu od sąsiednich punktów
-            w1 = x1[prev_index + 1] - x2_val
-            w2 = x2_val - x1[prev_index]
-
-            # Oblicz wartość dla punktu z x2 i dodaj ją do listy y2
-            interpolated_value = (y1[prev_index] * w1 + y1[prev_index + 1] * w2) / (w1 + w2)
-
-            y2.append(float(interpolated_value))
-        else:
-            # Jeśli x2_val przekracza największą wartość w x1, użyj ostatniej wartości y1
-            y2.append(float(y1[-1]))
-
-    return y2
-
 
 # Interpolacja najbliższy-sąsiad
-def closest_neightbour(x1, y1, x2):
+def closest_neighbour(x1, y1, x2):
     y2 = []
 
     # Porównaj każdą wartość z wektora x2 z wartościami wektora x1 aby sprawdzić do którego punktu z macierzy x1 jest bliżej
@@ -102,6 +70,7 @@ def closest_neightbour(x1, y1, x2):
     return y2
 
 
+# Funkcja do pomiaru błędu
 def err(y1, y2):
     sum = 0
     length = len(y2)
@@ -112,6 +81,7 @@ def err(y1, y2):
     return sum / length
 
 
+# Interpolacja wielomianem 2-ego stopnia
 def square_func(x1, y1, x2):
     # Tworzenie zmiennych
     y2 = []
@@ -156,6 +126,7 @@ def square_func(x1, y1, x2):
     return y2
 
 
+# Interpolacja wielomianem 3-ego stopnia
 def cubic_func(x1, y1, x2):
     # Tworzenie zmiennych
     y2 = []
@@ -269,7 +240,7 @@ def main():
     # fig.align_labels()
     # plt.show()
 
-    with Image.open("plik.jpg") as im:
+    with Image.open("image.png") as im:
         photo_array = np.array(im)
 
         red_Bayer_filtr = np.array([[[0,0,0], [0,0,0]],
@@ -314,7 +285,7 @@ def main():
             row = []
             for j in range(0,photo_array.shape[1], 2):
                 row.append(red[i, j, 0])
-            new_row = linear(temp2,row,temp1)
+            new_row = cubic_func(temp2,row,temp1)
             red[i,:,0] = new_row
 
         # Działanie na kolumnach
@@ -325,7 +296,7 @@ def main():
             column = []
             for j in range(1,photo_array.shape[0], 2):
                 column.append(red[j, i, 0])
-            new_column = linear(temp4,column,temp3)
+            new_column = cubic_func(temp4,column,temp3)
             red[:,i,0] = new_column
 
         result_image = (red).astype(np.uint8)
@@ -338,7 +309,7 @@ def main():
             row = []
             for j in range(0,photo_array.shape[1], 2):
                 row.append(green[i, j, 1])
-            new_row = linear(temp2,row,temp1)
+            new_row = cubic_func(temp2,row,temp1)
             green[i,:,1] = new_row
 
         # Działanie na kolumnach
@@ -346,7 +317,7 @@ def main():
             row = []
             for j in range(1,photo_array.shape[1], 2):
                 row.append(green[i, j, 1])
-            new_row = linear(temp2,row,temp1)
+            new_row = cubic_func(temp2,row,temp1)
             green[i,:,1] = new_row
 
         result_image = (green).astype(np.uint8)
@@ -359,7 +330,7 @@ def main():
             row = []
             for j in range(1,photo_array.shape[1], 2):
                 row.append(blue[i, j, 2])
-            new_row = linear(temp2,row,temp1)
+            new_row = cubic_func(temp2,row,temp1)
             blue[i,:,2] = new_row
 
         # Działanie na kolumnach
@@ -368,7 +339,7 @@ def main():
             column = []
             for j in range(0,photo_array.shape[0], 2):
                 column.append(blue[j, i, 2])
-            new_column = linear(temp4,column,temp3)
+            new_column = cubic_func(temp4,column,temp3)
             blue[:,i,2] = new_column
         
         result_image = (blue).astype(np.uint8)
