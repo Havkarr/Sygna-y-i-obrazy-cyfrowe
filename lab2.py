@@ -18,11 +18,11 @@ def filter(image, matrix):
     # Pomnóż obie macierze przez siebie (element-wise)
     result = image*resized_matrix
 
-    # # Tworzenie obrazu
-    # result_image = (result).astype(np.uint8)
+    # Tworzenie obrazu
+    result_image = (result).astype(np.uint8)
 
-    # plt.imshow(result_image)
-    # plt.show()
+    plt.imshow(result_image)
+    plt.show()
 
     return result
 
@@ -240,7 +240,8 @@ def main():
     # fig.align_labels()
     # plt.show()
 
-    with Image.open("image.png") as im:
+    # Nakładnanie filtru Bayera na obraz, interpolacja i połączenie obrazów.
+    with Image.open("plik.jpg") as im:
         photo_array = np.array(im)
 
         red_Bayer_filtr = np.array([[[0,0,0], [0,0,0]],
@@ -273,85 +274,164 @@ def main():
                                 [[0,0,1], [0,0,0], [0,0,0], [0,0,0], [0,0,0], [0,0,0]],
                                 [[0,0,0], [0,0,0], [0,0,0], [0,0,1], [0,0,0], [0,0,0]]])
 
-        red = filter(photo_array, red_Bayer_filtr)
-        green = filter(photo_array, green_Bayer_filtr)
-        blue = filter(photo_array, blue_Bayer_filtr)
+        # red = filter(photo_array, red_Bayer_filtr)
+        # green = filter(photo_array, green_Bayer_filtr)
+        # blue = filter(photo_array, blue_Bayer_filtr)
+
+        red_Fuji = filter(photo_array, red_Fuji_filtr)
+        green_Fuji = filter(photo_array, green_Fuji_filtr)
+        blue_Fuji = filter(photo_array, blue_Fuji_filtr)
         
-        # Działanie na wierszach
-        temp1 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
-        temp2 = np.linspace(0, photo_array.shape[1], int(photo_array.shape[1]/2))
 
-        for i in range(1, photo_array.shape[0], 2): 
-            row = []
-            for j in range(0,photo_array.shape[1], 2):
-                row.append(red[i, j, 0])
-            new_row = cubic_func(temp2,row,temp1)
-            red[i,:,0] = new_row
-
-        # Działanie na kolumnach
-        temp3 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
-        temp4 = np.linspace(0, photo_array.shape[0], int(photo_array.shape[0]/2))
-
-        for i in range(0, photo_array.shape[1]): 
-            column = []
-            for j in range(1,photo_array.shape[0], 2):
-                column.append(red[j, i, 0])
-            new_column = cubic_func(temp4,column,temp3)
-            red[:,i,0] = new_column
-
-        result_image = (red).astype(np.uint8)
-        plt.imshow(result_image)
-        plt.show()
+# Interpolacja z filtrów bayera
 ############################################################################################33
+        # Kolor czerwony
         # Działanie na wierszach
 
-        for i in range(0, photo_array.shape[0], 2): 
-            row = []
-            for j in range(0,photo_array.shape[1], 2):
-                row.append(green[i, j, 1])
-            new_row = cubic_func(temp2,row,temp1)
-            green[i,:,1] = new_row
+        # temp1 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
+        # temp2 = np.linspace(0, photo_array.shape[1], int(photo_array.shape[1]/2))
 
-        # Działanie na kolumnach
-        for i in range(1, photo_array.shape[0], 2): 
-            row = []
-            for j in range(1,photo_array.shape[1], 2):
-                row.append(green[i, j, 1])
-            new_row = cubic_func(temp2,row,temp1)
-            green[i,:,1] = new_row
+        # for i in range(1, photo_array.shape[0], 2): 
+        #     row = []
+        #     for j in range(0,photo_array.shape[1], 2):
+        #         row.append(red[i, j, 0])
+        #     new_row = cubic_func(temp2,row,temp1)
+        #     red[i,:,0] = new_row
 
-        result_image = (green).astype(np.uint8)
-        plt.imshow(result_image)
-        plt.show()
+        # # Działanie na kolumnach
+        # temp3 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
+        # temp4 = np.linspace(0, photo_array.shape[0], int(photo_array.shape[0]/2))
+
+        # for i in range(0, photo_array.shape[1]): 
+        #     column = []
+        #     for j in range(1,photo_array.shape[0], 2):
+        #         column.append(red[j, i, 0])
+        #     new_column = cubic_func(temp4,column,temp3)
+        #     red[:,i,0] = new_column
+
+        # result_image = (red).astype(np.uint8)
+        # plt.imshow(result_image)
+        # plt.show()
+
+############################################################################################33
+        # Kolor zielony (odpowiedni zmodyfikowany)
+        # Działanie na wierszach
+
+        # for i in range(0, photo_array.shape[0], 2): 
+        #     row = []
+        #     for j in range(0,photo_array.shape[1], 2):
+        #         row.append(green[i, j, 1])
+        #     new_row = cubic_func(temp2,row,temp1)
+        #     green[i,:,1] = new_row
+
+        # # Działanie na kolumnach
+        # for i in range(1, photo_array.shape[0], 2): 
+        #     row = []
+        #     for j in range(1,photo_array.shape[1], 2):
+        #         row.append(green[i, j, 1])
+        #     new_row = cubic_func(temp2,row,temp1)
+        #     green[i,:,1] = new_row
+
+        # result_image = (green).astype(np.uint8)
+        # plt.imshow(result_image)
+        # plt.show()
+
 ##################################################################################################
-         # Działanie na wierszach
+        # Kolor niebieski (również odpowiednio zmodyfikowany)
+        # Działanie na wierszach
 
-        for i in range(0, photo_array.shape[0], 2): 
-            row = []
-            for j in range(1,photo_array.shape[1], 2):
-                row.append(blue[i, j, 2])
-            new_row = cubic_func(temp2,row,temp1)
-            blue[i,:,2] = new_row
+        # for i in range(0, photo_array.shape[0], 2): 
+        #     row = []
+        #     for j in range(1,photo_array.shape[1], 2):
+        #         row.append(blue[i, j, 2])
+        #     new_row = cubic_func(temp2,row,temp1)
+        #     blue[i,:,2] = new_row
 
-        # Działanie na kolumnach
+        # # Działanie na kolumnach
 
-        for i in range(0, photo_array.shape[1]): 
-            column = []
-            for j in range(0,photo_array.shape[0], 2):
-                column.append(blue[j, i, 2])
-            new_column = cubic_func(temp4,column,temp3)
-            blue[:,i,2] = new_column
+        # for i in range(0, photo_array.shape[1]): 
+        #     column = []
+        #     for j in range(0,photo_array.shape[0], 2):
+        #         column.append(blue[j, i, 2])
+        #     new_column = cubic_func(temp4,column,temp3)
+        #     blue[:,i,2] = new_column
         
-        result_image = (blue).astype(np.uint8)
+        # result_image = (blue).astype(np.uint8)
+        # plt.imshow(result_image)
+        # plt.show()
+
+        # # Suma obrazów
+        # rm = red + blue + green
+
+        # result_image = (rm).astype(np.uint8)
+        # plt.imshow(result_image)
+        # plt.show()
+
+# Interpolacja z filtrów Fuji
+############################################################################################33
+        # Kolor czerwony
+        # Działanie na wierszach
+        temp = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
+        for i in range(photo_array.shape[0]):
+            tempY = []
+            tempX = []
+            for j in range(photo_array.shape[1]):
+                if red_Fuji[i][j][0] != 0:
+                    tempY.append(red_Fuji[i][j][0])
+                    tempX.append(j)
+            tempX.append(j+1)
+            tempY.append(tempY[-1])
+            new_row = linear(tempX,tempY,temp)
+            red_Fuji[i,:,0] = new_row
+        
+        result_image = (red_Fuji).astype(np.uint8)
         plt.imshow(result_image)
         plt.show()
 
-        rm = red + blue + green
-
-        result_image = (rm).astype(np.uint8)
+############################################################################################33
+        # Kolor zielony
+        # Działanie na wierszach
+        for i in range(photo_array.shape[0]):
+            tempY = []
+            tempX = []
+            for j in range(photo_array.shape[1]):
+                if green_Fuji[i][j][1] != 0:
+                    tempY.append(green_Fuji[i][j][1])
+                    tempX.append(j)
+            tempX.append(j+1)
+            tempY.append(tempY[-1])
+            new_row = linear(tempX,tempY,temp)
+            green_Fuji[i,:,1] = new_row
+        
+        result_image = (green_Fuji).astype(np.uint8)
         plt.imshow(result_image)
         plt.show()
 
+############################################################################################33
+        # Kolor niebieski
+        # Działanie na wierszach
+        temp = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
+        for i in range(photo_array.shape[0]):
+            tempY = []
+            tempX = []
+            for j in range(photo_array.shape[1]):
+                if blue_Fuji[i][j][2] != 0:
+                    tempY.append(blue_Fuji[i][j][2])
+                    tempX.append(j)
+            tempX.append(j+1)
+            tempY.append(tempY[-1])
+            new_row = linear(tempX,tempY,temp)
+            blue_Fuji[i,:,2] = new_row
+        
+        result_image = (blue_Fuji).astype(np.uint8)
+        plt.imshow(result_image)
+        plt.show()
+
+        result = red_Fuji + blue_Fuji + green_Fuji
+
+        result_image = (result).astype(np.uint8)
+        plt.imshow(result_image)
+        plt.show()
 
 if __name__ == "__main__":
     main()
