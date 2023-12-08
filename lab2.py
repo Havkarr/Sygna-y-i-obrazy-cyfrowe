@@ -181,35 +181,49 @@ def cubic_func(x1, y1, x2):
 
 
 # Interpolacja maską
+# rgb = 0 => red
+# rgb = 1 => green
+# rgb = 2 => blue
 def mask(img, rgb):
     # mask = [[[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
     #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
     #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
     #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]]
+    
+    # Stwórz tymczasową macierz która zostanie uzupełniona wartośćiami z interpolacji
     temp = np.array([[[0, 0, 0]]*img.shape[1]]*img.shape[0])
 
     for row in range(1, img.shape[0]-2):
         for col in range(1, img.shape[1]-2):
+            # Zsumuj wszystkie wartości z maski
+            # Dla kolorów czerwonego i niebieskiego dzielnik zawsze będzie wynosił 4
             if img[row][col][rgb] == 0 and (rgb == 0 or rgb == 2):
                 val = (img[row-1][col-1][rgb] + img[row-1][col][rgb] + img[row-1][col+1][rgb] + img[row-1][col+2][rgb] +
                        img[row][col-1][rgb] +img[row][col][rgb] +img[row][col+1][rgb] +img[row][col+2][rgb] +
                        img[row+1][col-1][rgb] +img[row+1][col][rgb] +img[row+1][col+1][rgb] +img[row+1][col+2][rgb] +
                        img[row+2][col-1][rgb] +img[row+2][col][rgb] +img[row+2][col+1][rgb] +img[row+2][col+2][rgb])/4
                 temp[row][col][rgb] = val
+            # Zsumuj wszystkie wartości z maski
+            # Dla koloru zielonego dzielnik będzie różny dlatego trzeba zliczać wartośći niezerowe
             elif img[row][col][rgb] == 0 and rgb == 1:
-                val = (img[row - 1][col - 1][rgb] + img[row - 1][col][rgb] + img[row - 1][col + 1][rgb] + img[row - 1][col + 2][rgb] +
-                       img[row][col - 1][rgb] + img[row][col][rgb] + img[row][col + 1][rgb] + img[row][col + 2][rgb] +
-                       img[row + 1][col - 1][rgb] + img[row + 1][col][rgb] + img[row + 1][col + 1][rgb] +
-                       img[row + 1][col + 2][rgb] +
-                       img[row + 2][col - 1][rgb] + img[row + 2][col][rgb] + img[row + 2][col + 1][rgb] +
-                       img[row + 2][col + 2][rgb]) / 8
+                divider = 0
+                values = [img[row - 1][col - 1][rgb], img[row - 1][col][rgb], img[row - 1][col + 1][rgb], img[row - 1][col + 2][rgb],
+                       img[row][col - 1][rgb], img[row][col][rgb], img[row][col + 1][rgb], img[row][col + 2][rgb],
+                       img[row + 1][col - 1][rgb], img[row + 1][col][rgb], img[row + 1][col + 1][rgb],
+                       img[row + 1][col + 2][rgb],
+                       img[row + 2][col - 1][rgb], img[row + 2][col][rgb], img[row + 2][col + 1][rgb],
+                       img[row + 2][col + 2][rgb]]
+                for value in values:
+                    if value != 0:
+                        divider += 1
+
+                val = sum(values) / divider
                 temp[row][col][rgb] = val
             else:
-                continue
-    pass
+                temp[row][col][rgb] = img[row][col][rgb]
+    
+    return temp
 
-    print(img.shape)
-    print(temp.shape)
 
 def main():
     # x1 = np.linspace(0, 5, 10)
@@ -311,10 +325,33 @@ def main():
         green = filter(photo_array, green_Bayer_filtr)
         blue = filter(photo_array, blue_Bayer_filtr)
 
-        mask(red, 0)
-        # red_Fuji = filter(photo_array, red_Fuji_filtr)
-        # green_Fuji = filter(photo_array, green_Fuji_filtr)
-        # blue_Fuji = filter(photo_array, blue_Fuji_filtr)
+        
+        red_Fuji = filter(photo_array, red_Fuji_filtr)
+        green_Fuji = filter(photo_array, green_Fuji_filtr)
+        blue_Fuji = filter(photo_array, blue_Fuji_filtr)
+
+        red_F = mask(red_Fuji, 0)
+        green_F = mask(green_Fuji, 1)
+        blue_F = mask(blue_Fuji, 2)
+
+        result_image = (red_F).astype(np.uint8)
+        plt.imshow(result_image)
+        plt.show()
+
+        result_image = (green_F).astype(np.uint8)
+        plt.imshow(result_image)
+        plt.show()
+
+        result_image = (blue_F).astype(np.uint8)
+        plt.imshow(result_image)
+        plt.show()
+
+        res = red_F + green_F + blue_F
+
+        result_image = (res).astype(np.uint8)
+        plt.imshow(result_image)
+        plt.show()
+
 
         # Interpolacja z filtrów bayera
         ############################################################################################33
