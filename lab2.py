@@ -3,11 +3,8 @@ import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from numpy.linalg import inv
 from PIL import Image
-
-'''
-Plan dalszych działań:
-- maska do filtru FUji
-'''
+import math 
+import time
 
 
 # Nakładanie filtru na obraz
@@ -189,30 +186,34 @@ def mask(img, rgb):
     #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
     #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
     #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]]
-    
-    # Stwórz tymczasową macierz która zostanie uzupełniona wartośćiami z interpolacji
-    temp = np.array([[[0, 0, 0]]*img.shape[1]]*img.shape[0])
 
-    for row in range(1, img.shape[0]-2):
-        for col in range(1, img.shape[1]-2):
+    # Stwórz tymczasową macierz która zostanie uzupełniona wartośćiami z interpolacji
+    temp = np.array([[[0, 0, 0]] * img.shape[1]] * img.shape[0])
+
+    for row in range(1, img.shape[0] - 2):
+        for col in range(1, img.shape[1] - 2):
             # Zsumuj wszystkie wartości z maski
             # Dla kolorów czerwonego i niebieskiego dzielnik zawsze będzie wynosił 4
             if img[row][col][rgb] == 0 and (rgb == 0 or rgb == 2):
-                val = (img[row-1][col-1][rgb] + img[row-1][col][rgb] + img[row-1][col+1][rgb] + img[row-1][col+2][rgb] +
-                       img[row][col-1][rgb] +img[row][col][rgb] +img[row][col+1][rgb] +img[row][col+2][rgb] +
-                       img[row+1][col-1][rgb] +img[row+1][col][rgb] +img[row+1][col+1][rgb] +img[row+1][col+2][rgb] +
-                       img[row+2][col-1][rgb] +img[row+2][col][rgb] +img[row+2][col+1][rgb] +img[row+2][col+2][rgb])/4
+                val = (img[row - 1][col - 1][rgb] + img[row - 1][col][rgb] + img[row - 1][col + 1][rgb] +
+                       img[row - 1][col + 2][rgb] +
+                       img[row][col - 1][rgb] + img[row][col][rgb] + img[row][col + 1][rgb] + img[row][col + 2][rgb] +
+                       img[row + 1][col - 1][rgb] + img[row + 1][col][rgb] + img[row + 1][col + 1][rgb] +
+                       img[row + 1][col + 2][rgb] +
+                       img[row + 2][col - 1][rgb] + img[row + 2][col][rgb] + img[row + 2][col + 1][rgb] +
+                       img[row + 2][col + 2][rgb]) / 4
                 temp[row][col][rgb] = val
             # Zsumuj wszystkie wartości z maski
             # Dla koloru zielonego dzielnik będzie różny dlatego trzeba zliczać wartośći niezerowe
             elif img[row][col][rgb] == 0 and rgb == 1:
                 divider = 0
-                values = [img[row - 1][col - 1][rgb], img[row - 1][col][rgb], img[row - 1][col + 1][rgb], img[row - 1][col + 2][rgb],
-                       img[row][col - 1][rgb], img[row][col][rgb], img[row][col + 1][rgb], img[row][col + 2][rgb],
-                       img[row + 1][col - 1][rgb], img[row + 1][col][rgb], img[row + 1][col + 1][rgb],
-                       img[row + 1][col + 2][rgb],
-                       img[row + 2][col - 1][rgb], img[row + 2][col][rgb], img[row + 2][col + 1][rgb],
-                       img[row + 2][col + 2][rgb]]
+                values = [img[row - 1][col - 1][rgb], img[row - 1][col][rgb], img[row - 1][col + 1][rgb],
+                          img[row - 1][col + 2][rgb],
+                          img[row][col - 1][rgb], img[row][col][rgb], img[row][col + 1][rgb], img[row][col + 2][rgb],
+                          img[row + 1][col - 1][rgb], img[row + 1][col][rgb], img[row + 1][col + 1][rgb],
+                          img[row + 1][col + 2][rgb],
+                          img[row + 2][col - 1][rgb], img[row + 2][col][rgb], img[row + 2][col + 1][rgb],
+                          img[row + 2][col + 2][rgb]]
                 for value in values:
                     if value != 0:
                         divider += 1
@@ -221,8 +222,50 @@ def mask(img, rgb):
                 temp[row][col][rgb] = val
             else:
                 temp[row][col][rgb] = img[row][col][rgb]
-    
+
     return temp
+
+
+def twist(photo_array):
+    shift_H = int(photo_array.shape[0]/2)
+    shift_W = int(photo_array.shape[1]/2)
+
+    # kąt 36 stpni w radianach
+    radius = -(math.pi/5)
+    R_alfa = np.array([[math.cos(radius), -1*math.sin(radius)],
+              [math.sin(radius), math.cos(radius)]])
+
+    mat = [[0],
+            [0]]
+
+    shifted_img = np.zeros((photo_array.shape[0], photo_array.shape[1], 3))
+
+    for W in range(photo_array.shape[1]):
+        for H in range(photo_array.shape[0]):
+            mat = np.array([[W - shift_W, H - shift_H]]) 
+            rmat = (R_alfa @ mat.T).T + np.array([[shift_W, shift_H]])
+
+            if 0 <= rmat[0, 0] < photo_array.shape[1]-1 and 0 <= rmat[0, 1] < photo_array.shape[0]-1:
+                # Interpolacja dwuliniowa
+                x, y = rmat[0]
+                x0, y0 = int(np.floor(x)), int(np.floor(y))
+                x1, y1 = int(np.ceil(x)), int(np.ceil(y))
+
+                if x0 == x1 and y0 == y1:
+                    shifted_img[H, W] = photo_array[y0, x0]
+                elif (x0 == x1):
+                    shifted_img[H, W] = (photo_array[y0, x0] * ((y1 - y)) +
+                                        photo_array[y1, x0] * ((y - y0))) / (y1 - y0)
+                elif (y0 == y1):
+                    shifted_img[H, W] = (photo_array[y0, x0] * ((x1 - x)) +
+                                        photo_array[y1, x1] * ((x - x0))) / (x1 - x0)
+                else:
+                    shifted_img[H, W] = (photo_array[y0, x0] * ((y1 - y) * (x1 - x)) +
+                                        photo_array[y1, x1] * ((y - y0) * (x - x0)) +
+                                        photo_array[y0, x1] * ((y1 - y) * (x - x0)) +
+                                        photo_array[y1, x0] * ((y - y0) * (x1 - x0))) / ((y1 - y0) * (x1 - x0) + (y - y0) * (x - x0))
+
+    return shifted_img  
 
 
 def main():
@@ -288,8 +331,20 @@ def main():
     # plt.show()
 
     # Nakładnanie filtru Bayera na obraz, interpolacja i połączenie obrazów.
-    with Image.open("plik.jpg") as im:
+    with Image.open("kicia.jpeg") as im:
         photo_array = np.array(im)
+
+        start_time = time.time()
+
+        photo_array = twist(photo_array)
+
+        end_time = time.time()
+
+        czs = end_time - start_time
+
+        print (czs)
+
+        return 0
 
         red_Bayer_filtr = np.array([[[0, 0, 0], [1, 0, 0]],
                                     [[0, 0, 0], [0, 0, 0]]])
@@ -325,7 +380,6 @@ def main():
         green = filter(photo_array, green_Bayer_filtr)
         blue = filter(photo_array, blue_Bayer_filtr)
 
-        
         red_Fuji = filter(photo_array, red_Fuji_filtr)
         green_Fuji = filter(photo_array, green_Fuji_filtr)
         blue_Fuji = filter(photo_array, blue_Fuji_filtr)
@@ -352,32 +406,31 @@ def main():
         plt.imshow(result_image)
         plt.show()
 
-
         # Interpolacja z filtrów bayera
         ############################################################################################33
         # Kolor czerwony
         # Działanie na wierszach
 
         temp1 = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
-        temp2 = np.linspace(0, photo_array.shape[1], int(photo_array.shape[1]/2))
+        temp2 = np.linspace(0, photo_array.shape[1], int(photo_array.shape[1] / 2))
 
         for i in range(0, photo_array.shape[0], 2):
             row = []
-            for j in range(1,photo_array.shape[1], 2):
+            for j in range(1, photo_array.shape[1], 2):
                 row.append(red[i, j, 0])
-            new_row = linear(temp2,row,temp1)
-            red[i,:,0] = new_row
+            new_row = linear(temp2, row, temp1)
+            red[i, :, 0] = new_row
 
         # # Działanie na kolumnach
         temp3 = np.linspace(0, photo_array.shape[0], photo_array.shape[0])
-        temp4 = np.linspace(0, photo_array.shape[0], int(photo_array.shape[0]/2))
+        temp4 = np.linspace(0, photo_array.shape[0], int(photo_array.shape[0] / 2))
 
         for i in range(0, photo_array.shape[1]):
             column = []
-            for j in range(0,photo_array.shape[0], 2):
+            for j in range(0, photo_array.shape[0], 2):
                 column.append(red[j, i, 0])
-            new_column = linear(temp4,column,temp3)
-            red[:,i,0] = new_column
+            new_column = linear(temp4, column, temp3)
+            red[:, i, 0] = new_column
 
         result_image = (red).astype(np.uint8)
         plt.imshow(result_image)
@@ -389,18 +442,18 @@ def main():
 
         for i in range(0, photo_array.shape[0], 2):
             row = []
-            for j in range(0,photo_array.shape[1], 2):
+            for j in range(0, photo_array.shape[1], 2):
                 row.append(green[i, j, 1])
-            new_row = linear(temp2,row,temp1)
-            green[i,:,1] = new_row
+            new_row = linear(temp2, row, temp1)
+            green[i, :, 1] = new_row
 
         # Działanie na kolumnach
         for i in range(1, photo_array.shape[0], 2):
             row = []
-            for j in range(1,photo_array.shape[1], 2):
+            for j in range(1, photo_array.shape[1], 2):
                 row.append(green[i, j, 1])
-            new_row = linear(temp2,row,temp1)
-            green[i,:,1] = new_row
+            new_row = linear(temp2, row, temp1)
+            green[i, :, 1] = new_row
 
         result_image = (green).astype(np.uint8)
         plt.imshow(result_image)
@@ -412,19 +465,19 @@ def main():
 
         for i in range(1, photo_array.shape[0], 2):
             row = []
-            for j in range(0,photo_array.shape[1], 2):
+            for j in range(0, photo_array.shape[1], 2):
                 row.append(blue[i, j, 2])
-            new_row = linear(temp2,row,temp1)
-            blue[i,:,2] = new_row
+            new_row = linear(temp2, row, temp1)
+            blue[i, :, 2] = new_row
 
         # # Działanie na kolumnach
 
         for i in range(0, photo_array.shape[1]):
             column = []
-            for j in range(1,photo_array.shape[0], 2):
+            for j in range(1, photo_array.shape[0], 2):
                 column.append(blue[j, i, 2])
-            new_column = linear(temp4,column,temp3)
-            blue[:,i,2] = new_column
+            new_column = linear(temp4, column, temp3)
+            blue[:, i, 2] = new_column
 
         result_image = (blue).astype(np.uint8)
         plt.imshow(result_image)
