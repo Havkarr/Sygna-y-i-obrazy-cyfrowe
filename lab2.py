@@ -8,8 +8,10 @@ import time
 
 
 # Nakładanie filtru na obraz
+# image - macierz obrazu
+# matrix - macierz filtra
 def filter(image, matrix):
-    # resize matrix
+    # zmień rozmiar macierzy
     resized_matrix = np.tile(matrix,
                              ((image.shape[0] // matrix.shape[0]) + 1, (image.shape[1] // matrix.shape[1]) + 1, 1))
     resized_matrix = resized_matrix[:image.shape[0], :image.shape[1]]
@@ -17,11 +19,10 @@ def filter(image, matrix):
     # Pomnóż obie macierze przez siebie (element-wise)
     result = image * resized_matrix
 
-    # Tworzenie obrazu
-    result_image = (result).astype(np.uint8)
-
-    plt.imshow(result_image)
-    plt.show()
+    # Opcjonalne wyświetlanie obrazu
+    # result_image = (result).astype(np.uint8)
+    # plt.imshow(result_image)
+    # plt.show()
 
     return result
 
@@ -69,7 +70,7 @@ def closest_neighbour(x1, y1, x2):
     return y2
 
 
-# Funkcja do pomiaru błędu
+# Funkcja do pomiaru błędu średnio-kwadratowego
 def err(y1, y2):
     sum = 0
     length = len(y2)
@@ -178,15 +179,12 @@ def cubic_func(x1, y1, x2):
 
 
 # Interpolacja maską
+# img - macierz koloru
+# Parametr rgb wybiera kolor do interpolacji
 # rgb = 0 => red
 # rgb = 1 => green
 # rgb = 2 => blue
 def mask(img, rgb):
-    # mask = [[[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
-    #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
-    #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
-    #         [[1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]]]
-
     # Stwórz tymczasową macierz która zostanie uzupełniona wartośćiami z interpolacji
     temp = np.array([[[0, 0, 0]] * img.shape[1]] * img.shape[0])
 
@@ -226,11 +224,16 @@ def mask(img, rgb):
     return temp
 
 
+# Obracanie obrazu
+# photo_array - macierz obrazu
 def twist(photo_array):
+    # Obliczanie połowy obrazu
     shift_H = int(photo_array.shape[0]/2)
     shift_W = int(photo_array.shape[1]/2)
 
-    # kąt 36 stpni w radianach
+    # kąt 36 stpni w radianach.
+    # Formuła: math.pi/x = porządany kąt w radianach
+    # gdzie math.pi = 180 stopni
     radius = -(math.pi/5)
     R_alfa = np.array([[math.cos(radius), -1*math.sin(radius)],
               [math.sin(radius), math.cos(radius)]])
@@ -240,13 +243,14 @@ def twist(photo_array):
 
     shifted_img = np.zeros((photo_array.shape[0], photo_array.shape[1], 3))
 
+    # Dla każdego punktu w nowym obrazie znajdź odpowiadający punkt na starym obrazie.
+    # Nastepnię zastosuj interpolację.
     for W in range(photo_array.shape[1]):
         for H in range(photo_array.shape[0]):
             mat = np.array([[W - shift_W, H - shift_H]]) 
             rmat = (R_alfa @ mat.T).T + np.array([[shift_W, shift_H]])
 
             if 0 <= rmat[0, 0] < photo_array.shape[1]-1 and 0 <= rmat[0, 1] < photo_array.shape[0]-1:
-                # Interpolacja dwuliniowa
                 x, y = rmat[0]
                 x0, y0 = int(np.floor(x)), int(np.floor(y))
                 x1, y1 = int(np.ceil(x)), int(np.ceil(y))
@@ -269,82 +273,82 @@ def twist(photo_array):
 
 
 def main():
-    # x1 = np.linspace(0, 5, 10)
-    # x2 = np.linspace(0, 5, 100)
+    
+    #---------------------------------------------- Interpolacja 1D ---------------------------------------------------
+
+    x1 = np.linspace(0, 5, 10)
+    x2 = np.linspace(0, 5, 100)
     # Funkcja interpolowana
-    # y1 = np.sin(x1)
-    # y100 = np.sin(x2)
+    y1 = np.sin(x1)
+    y100 = np.sin(x2)
     # Interpolacja liniowa
-    # y2 = linear(x1, y1, x2)
+    y2 = linear(x1, y1, x2)
     # Interpolacja najbliższy-sąsiad
-    # y3 = closest_neightbour(x1, y1, x2)
+    y3 = closest_neighbour(x1, y1, x2)
 
     # Stworzenie płótna i podzielenie go na sekcje
-    # fig = plt.figure(tight_layout=True)
-    # gs = gridspec.GridSpec(2, 2)
+    fig1 = plt.figure(tight_layout=True)
+    gs1 = gridspec.GridSpec(2, 2)
 
     # Tworzenie oryginalnego sinusa
-    # ax = fig.add_subplot(gs[0, :])
-    # ax.plot(x1, y1, '.r')
-    # plt.title("Oryginalny sinus")
-    # ax.set_ylabel('Y')
-    # ax.set_xlabel('X')
+    ax = fig1.add_subplot(gs1[0, :])
+    ax.plot(x1, y1, '.r')
+    plt.title("Oryginalny sinus")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
 
-    # # # Tworzenie wykresu interpolacji najbliższy-sąsiad
-    # # ax = fig.add_subplot(gs[1, 0])
-    # # ax.plot(x2, y3, '.b')
-    # # plt.title("Najbliższy-sąsiad")
-    # # ax.set_ylabel('Y')
-    # # ax.set_xlabel('X')
+    # Tworzenie wykresu interpolacji najbliższy-sąsiad
+    ax = fig1.add_subplot(gs1[1, 0])
+    ax.plot(x2, y3, '.b')
+    plt.title("Najbliższy-sąsiad")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
 
-    # # # Tworzenie wykresu interpolacji liniowej
-    # # ax = fig.add_subplot(gs[1, 1])
-    # # ax.plot(x2, y2, '.g')
-    # # plt.title("Interpolacja liniowa")
-    # # ax.set_ylabel('Y')
-    # # ax.set_xlabel('X')
+    # Tworzenie wykresu interpolacji liniowej
+    ax = fig1.add_subplot(gs1[1, 1])
+    ax.plot(x2, y2, '.g')
+    plt.title("Interpolacja liniowa")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
+
+    fig1.align_labels()
+    plt.show()
+
+    # Stworzenie płótna i podzielenie go na sekcje
+    fig2 = plt.figure(tight_layout=True)
+    gs2 = gridspec.GridSpec(2, 2)
 
     # Tworzenie oryginalnego sinusa 100 punktów
-    # ax = fig.add_subplot(gs[0, :])
-    # ax.plot(x1, y1, '.r')
-    # plt.title("Oryginalny sinus")
-    # ax.set_ylabel('Y')
-    # ax.set_xlabel('X')
+    ax = fig2.add_subplot(gs2[0, :])
+    ax.plot(x1, y1, '.r')
+    plt.title("Oryginalny sinus")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
 
     # Tworzenie wykresu interpolacji funkcją kwadratową
-    # y4 = square_func(x1, y1, x2)
-    # ax = fig.add_subplot(gs[1, :])
-    # ax.plot(x2, y4, '.b')
-    # plt.title("Kwadratowa")
-    # ax.set_ylabel('Y')
-    # ax.set_xlabel('X')
+    y4 = square_func(x1, y1, x2)
+    ax = fig2.add_subplot(gs2[1, 0])
+    ax.plot(x2, y4, '.b')
+    plt.title("Kwadratowa")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
 
     # # Tworzenie wykresu funkcją sześcienną
-    # y5 = cubic_func(x1, y1, x2)
-    # ax = fig.add_subplot(gs[1, :])
-    # ax.plot(x2, y5, '.g')
-    # plt.title("Sześcienna")
-    # ax.set_ylabel('Y')
-    # ax.set_xlabel('X')
+    y5 = cubic_func(x1, y1, x2)
+    ax = fig2.add_subplot(gs2[1, 1])
+    ax.plot(x2, y5, '.g')
+    plt.title("Sześcienna")
+    ax.set_ylabel('Y')
+    ax.set_xlabel('X')
 
-    # fig.align_labels()
-    # plt.show()
+    fig2.align_labels()
+    plt.show()
+
+    #---------------------------------------------- Interpolacja obrazów ---------------------------------------------------
 
     # Nakładnanie filtru Bayera na obraz, interpolacja i połączenie obrazów.
     with Image.open("kicia.jpeg") as im:
         photo_array = np.array(im)
-
-        start_time = time.time()
-
-        photo_array = twist(photo_array)
-
-        end_time = time.time()
-
-        czs = end_time - start_time
-
-        print (czs)
-
-        return 0
 
         red_Bayer_filtr = np.array([[[0, 0, 0], [1, 0, 0]],
                                     [[0, 0, 0], [0, 0, 0]]])
@@ -376,35 +380,20 @@ def main():
                                     [[0, 0, 1], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]],
                                     [[0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]]])
 
+        # Nakładanie filtru bayera
         red = filter(photo_array, red_Bayer_filtr)
         green = filter(photo_array, green_Bayer_filtr)
         blue = filter(photo_array, blue_Bayer_filtr)
 
+        # Nakładanie filtru fuji
         red_Fuji = filter(photo_array, red_Fuji_filtr)
         green_Fuji = filter(photo_array, green_Fuji_filtr)
         blue_Fuji = filter(photo_array, blue_Fuji_filtr)
 
+        # Interpolacja maską
         red_F = mask(red_Fuji, 0)
         green_F = mask(green_Fuji, 1)
         blue_F = mask(blue_Fuji, 2)
-
-        result_image = (red_F).astype(np.uint8)
-        plt.imshow(result_image)
-        plt.show()
-
-        result_image = (green_F).astype(np.uint8)
-        plt.imshow(result_image)
-        plt.show()
-
-        result_image = (blue_F).astype(np.uint8)
-        plt.imshow(result_image)
-        plt.show()
-
-        res = red_F + green_F + blue_F
-
-        result_image = (res).astype(np.uint8)
-        plt.imshow(result_image)
-        plt.show()
 
         # Interpolacja z filtrów bayera
         ############################################################################################33
@@ -418,6 +407,7 @@ def main():
             row = []
             for j in range(1, photo_array.shape[1], 2):
                 row.append(red[i, j, 0])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_row = linear(temp2, row, temp1)
             red[i, :, 0] = new_row
 
@@ -429,6 +419,7 @@ def main():
             column = []
             for j in range(0, photo_array.shape[0], 2):
                 column.append(red[j, i, 0])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_column = linear(temp4, column, temp3)
             red[:, i, 0] = new_column
 
@@ -436,7 +427,6 @@ def main():
         plt.imshow(result_image)
         plt.show()
 
-        ############################################################################################33
         # Kolor zielony (odpowiedni zmodyfikowany)
         # Działanie na wierszach
 
@@ -444,6 +434,7 @@ def main():
             row = []
             for j in range(0, photo_array.shape[1], 2):
                 row.append(green[i, j, 1])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_row = linear(temp2, row, temp1)
             green[i, :, 1] = new_row
 
@@ -452,6 +443,7 @@ def main():
             row = []
             for j in range(1, photo_array.shape[1], 2):
                 row.append(green[i, j, 1])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_row = linear(temp2, row, temp1)
             green[i, :, 1] = new_row
 
@@ -459,7 +451,6 @@ def main():
         plt.imshow(result_image)
         plt.show()
 
-        ##################################################################################################
         # Kolor niebieski (również odpowiednio zmodyfikowany)
         # Działanie na wierszach
 
@@ -467,6 +458,7 @@ def main():
             row = []
             for j in range(0, photo_array.shape[1], 2):
                 row.append(blue[i, j, 2])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_row = linear(temp2, row, temp1)
             blue[i, :, 2] = new_row
 
@@ -476,6 +468,7 @@ def main():
             column = []
             for j in range(1, photo_array.shape[0], 2):
                 column.append(blue[j, i, 2])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_column = linear(temp4, column, temp3)
             blue[:, i, 2] = new_column
 
@@ -504,6 +497,7 @@ def main():
                     tempX.append(j)
             tempX.append(j + 1)
             tempY.append(tempY[-1])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_row = linear(tempX, tempY, temp)
             red_Fuji[i, :, 0] = new_row
 
@@ -511,7 +505,6 @@ def main():
         plt.imshow(result_image)
         plt.show()
 
-        ############################################################################################33
         # Kolor zielony
         # Działanie na wierszach
         for i in range(photo_array.shape[0]):
@@ -523,6 +516,7 @@ def main():
                     tempX.append(j)
             tempX.append(j + 1)
             tempY.append(tempY[-1])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_row = linear(tempX, tempY, temp)
             green_Fuji[i, :, 1] = new_row
 
@@ -530,7 +524,6 @@ def main():
         plt.imshow(result_image)
         plt.show()
 
-        ############################################################################################33
         # Kolor niebieski
         # Działanie na wierszach
         temp = np.linspace(0, photo_array.shape[1], photo_array.shape[1])
@@ -543,6 +536,7 @@ def main():
                     tempX.append(j)
             tempX.append(j + 1)
             tempY.append(tempY[-1])
+            # Aby zmienić rodzaj interpolacji należy zmienić poniższą funkcję na inną. Argumenty pozostaja te same.
             new_row = linear(tempX, tempY, temp)
             blue_Fuji[i, :, 2] = new_row
 
@@ -556,6 +550,12 @@ def main():
         plt.imshow(result_image)
         plt.show()
 
+    #---------------------------------------------- Obrót obrazu ---------------------------------------------------
+        photo_array = twist(photo_array)
+
+        result_image = (photo_array).astype(np.uint8)
+        plt.imshow(result_image)
+        plt.show()
 
 if __name__ == "__main__":
     main()
